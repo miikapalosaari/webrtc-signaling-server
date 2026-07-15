@@ -46,6 +46,17 @@ private:
     void handleAnswer(int ws, const json& message);
     void handleCandidate(int ws, const json& message);
 
+    std::string generateRoomId();
+
+    Client* findClient(int socket);
+    Client* findClientByPlayerId(const std::string& playerId);
+    Room* findRoom(const std::string& roomId);
+    void sendJson(int socket, const json& message);
+    void sendError(int socket, const std::string& error);
+
+    void sendToRoom(const Room& room, const json& message);
+    void sendToRoomExcept(const Room& room, const json& message, int exceptSocket);
+
     std::unordered_map<int, Client> m_clients;
     std::unordered_map<std::string, Room> m_rooms;
 };
