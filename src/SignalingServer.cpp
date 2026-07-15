@@ -82,6 +82,9 @@ void SignalingServer::onMessage(int ws, const char* msg, int size) {
         if (type == "register") {
             handleRegister(ws, message);
         }
+        else if (type == "listRooms") {
+            handleListRooms(ws, message);
+        }
         else if (type == "createRoom") {
             handleCreateRoom(ws, message);
         }
@@ -143,6 +146,24 @@ void SignalingServer::handleRegister(int ws, const json& message) {
     std::cout << "Registered player " << playerId << " on socket " << ws << std::endl;
 }
 
+void SignalingServer::handleListRooms(int ws, const json& message) {
+    json reply;
+    reply["type"] = "roomList";
+    reply["rooms"] = json::array();
+
+    for (const auto& [id, room] : m_rooms) {
+        json roomInfo;
+        roomInfo["id"] = room.id;
+        roomInfo["name"] = room.name;
+        roomInfo["players"] = room.playerSockets.size();
+        roomInfo["maxPlayers"] = room.MAX_PLAYERS;
+
+        reply["rooms"].push_back(roomInfo);
+    }
+
+    sendJson(ws, reply);
+}
+
 std::string SignalingServer::generateRoomId() {
     static bool seeded = false;
     if (!seeded) {
@@ -185,6 +206,8 @@ void SignalingServer::handleCreateRoom(int ws, const json& message) {
     Room room;
     room.id = generateRoomId();
     room.playerSockets.push_back(ws);
+    room.hostSocket = ws;
+    room.name = message.value("name", "New Room");
 
     client->roomId = room.id;
 
@@ -223,7 +246,7 @@ void SignalingServer::handleJoinRoom(int ws, const json& message) {
         return;
     }
 
-    if (room->playerSockets.size() >= Room::MAX_PLAYERS) {
+    if (room->playerSockets.size() >= room->MAX_PLAYERS) {
         sendError(ws, "Room is full.");
         return;
     }

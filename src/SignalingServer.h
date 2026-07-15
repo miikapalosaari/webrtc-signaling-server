@@ -13,8 +13,12 @@ struct Client {
 
 struct Room {
     std::string id;
+    std::string name;
+   
+    int hostSocket;
+
     std::vector<int> playerSockets;
-    static constexpr int MAX_PLAYERS = 4;
+    int MAX_PLAYERS = 4;
 };
 
 using json = nlohmann::json;
@@ -37,6 +41,7 @@ private:
     static void onClosedCallback(int ws, void* ptr);
 
     void handleRegister(int ws, const json& message);
+    void handleListRooms(int ws, const json& message);
 
     void handleCreateRoom(int ws, const json& message);
     void handleJoinRoom(int ws, const json& message);
