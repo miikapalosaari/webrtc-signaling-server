@@ -137,13 +137,17 @@ void SignalingServer::handleRegister(int ws, const json& message) {
     }
 
     if (findClientByPlayerId(playerId)) {
-        sendError(ws, playerId);
+        sendError(ws, "Player ID already exists.");
         return;
     }
 
     client->playerId = playerId;
 
-    std::cout << "Registered player " << playerId << " on socket " << ws << std::endl;
+    json reply;
+    reply["type"] = "registered";
+    reply["playerId"] = playerId;
+
+    sendJson(ws, reply);
 }
 
 void SignalingServer::handleListRooms(int ws, const json& message) {
