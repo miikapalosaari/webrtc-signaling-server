@@ -6,6 +6,7 @@
 
 struct Client {
     int socket = -1;
+    std::string name;
     std::string playerId;
     std::string roomId;
     bool ready = false;
@@ -61,6 +62,8 @@ private:
 
     void sendToRoom(const Room& room, const json& message);
     void sendToRoomExcept(const Room& room, const json& message, int exceptSocket);
+    
+    std::string generateUUIDv4();
 
     std::unordered_map<int, Client> m_clients;
     std::unordered_map<std::string, Room> m_rooms;

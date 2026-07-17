@@ -130,22 +130,21 @@ void SignalingServer::handleRegister(int ws, const json& message) {
         return;
     }
 
-    std::string playerId = message.value("playerId", "");
-    if (playerId.empty()) {
-        sendError(ws, "Player ID cannot be empty.");
-        return;
-    }
+    std::string playerName = message.value("name", "");
+    std::string playerId = generateUUIDv4();
 
-    if (findClientByPlayerId(playerId)) {
-        sendError(ws, "Player ID already exists.");
+    if (playerName.empty()) {
+        sendError(ws, "Player Name cannot be empty.");
         return;
     }
 
     client->playerId = playerId;
+    client->name = playerName;
 
     json reply;
     reply["type"] = "registered";
     reply["playerId"] = playerId;
+    reply["name"] = playerName;
 
     sendJson(ws, reply);
 }
@@ -261,6 +260,7 @@ void SignalingServer::handleJoinRoom(int ws, const json& message) {
     json joined;
     joined["type"] = "playerJoined";
     joined["playerId"] = client->playerId;
+    joined["name"] = client->name;
     sendToRoomExcept(*room, joined, ws);
 
     json reply;
@@ -271,7 +271,10 @@ void SignalingServer::handleJoinRoom(int ws, const json& message) {
     for (int socket : room->playerSockets) {
         Client* other = findClient(socket);
         if (other) {
-            reply["players"].push_back(other->playerId);
+            json player;
+            player["playerId"] = other->playerId;
+            player["name"] = other->name;
+            reply["players"].push_back(player);
         }
     }
 
@@ -418,4 +421,33 @@ void SignalingServer::sendToRoomExcept(const Room& room, const json& message, in
         }
         sendJson(socket, message);
     }
+}
+
+std::string SignalingServer::generateUUIDv4() {
+    static const char* chars = "0123456789abcdef";
+    std::string uuid(36, ' ');
+
+    int rnd;
+
+    for (int i = 0; i < 36; i++) {
+        switch (i) {
+        case 8:
+        case 13:
+        case 18:
+        case 23:
+            uuid[i] = '-';
+            break;
+        case 14:
+            uuid[i] = '4';
+            break;
+        case 19:
+            rnd = std::rand() % 16;
+            uuid[i] = chars[(rnd & 0x3) | 0x8];
+            break;
+        default:
+            rnd = std::rand() % 16;
+            uuid[i] = chars[rnd];
+        }
+    }
+    return uuid;
 }
