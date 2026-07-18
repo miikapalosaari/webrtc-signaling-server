@@ -297,6 +297,7 @@ void SignalingServer::handleLeaveRoom(int ws, const json& message) {
     json left;
     left["type"] = "playerLeft";
     left["playerId"] = client->playerId;
+    left["name"] = client->name;
     sendToRoomExcept(*room, left, ws);
 
     auto& playerSockets = room->playerSockets;
