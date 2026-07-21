@@ -267,6 +267,8 @@ void SignalingServer::handleJoinRoom(int ws, const json& message) {
     reply["type"] = "roomJoined";
     reply["roomId"] = roomId;
     reply["players"] = json::array();
+    Client* host = findClient(room->hostSocket);
+    reply["hostId"] = host->playerId;
 
     for (int socket : room->playerSockets) {
         Client* other = findClient(socket);
